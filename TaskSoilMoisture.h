@@ -8,8 +8,10 @@ public:
 
     void Callback();
 
+    int getMoistureLevel();
+
 private:
-    // Здесь могут быть приватные переменные и другие методы
+  int moistureLevel;
 };
 
 #endif // TASK_SOIL_MOISTURE_H

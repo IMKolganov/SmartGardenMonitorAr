@@ -1,5 +1,5 @@
-#include "TaskSoilMoisture.h"
-#include "TaskTempHumidity.h"
+#include "RequestTempHumidity.h"
+#include "RequestSoilMoisture.h"
 #include <ArduinoJson.h>
 
 #define DHT_PIN 7
@@ -7,40 +7,44 @@
 
 DHT dht(DHT_PIN, DHT_TYPE);
 
-TaskSoilMoisture taskSoilMoisture(5000); 
-TaskTempHumidity taskTempHumidity(6000, &dht);
+RequestTempHumidity requestTempHumidity(&dht, 6000);
+RequestSoilMoisture requestSoilMoisture(5000);
 
 void setup() {
-    // Инициализация и другие настройки
     Serial.begin(9600);
     dht.begin();    
 }
 
 void loop() {
   if (Serial.available() > 0) {
-      // Считываем первый доступный символ (предполагая, что приходит однобайтовая команда)
-      char command = Serial.read();
-
-      // Обработка команды
-      switch (command) {
-          case 'S':
-              // Выполняем задачу для измерения влажности почвы
-              taskSoilMoisture.Callback();
-              break;
-          case 'T':
-              // Выполняем задачу для измерения температуры и влажности
-              taskTempHumidity.Callback();
-              break;
-          default:
-              // Неизвестная команда, можно отправить сообщение об ошибке или игнорировать
-              Serial.println("Unknown command!");
-              break;
-      }
+    String jsonString = Serial.readStringUntil('\n');
+    
+    JsonDocument requestDoc;
+    DeserializationError error = deserializeJson(requestDoc, jsonString);
+  
+    if (error) {
+        Serial.println("Error parsing JSON request");
+        return;
+    }
+  
+    String idrequest = requestDoc["idrequest"].as<String>();
+    const char* sensor = requestDoc["sensor"];
+  
+    JsonDocument responseDoc;
+    responseDoc["idrequest"] = idrequest;
+  
+    if (strcmp(sensor, "temp_humidity") == 0) {
+      requestTempHumidity.handleRequest(requestDoc, responseDoc);
+    } else if (strcmp(sensor, "soil_moisture") == 0) {
+      requestSoilMoisture.handleRequest(requestDoc, responseDoc);
+    } else {
+      responseDoc["status"] = "unknown sensor";
+    }
+  
+    serializeJson(responseDoc, Serial);
+      Serial.println();
   }
 
-    
-  //taskSoilMoisture.Callback();
-  //taskTempHumidity.Callback();
-  
-  delay(1000); // Пример задержки
+  // Пример задержки
+  delay(1000);
 }

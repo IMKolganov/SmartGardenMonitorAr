@@ -1,18 +1,21 @@
-#ifndef TASK_TEMP_HUMIDITY_H
+#ifndef TASKTEMP_HUMIDITY_H
 #define _TASK_INLINE
-#include <TaskScheduler.h>
 
-#include "DHT.h"
+#include <DHT.h>
+#include <TaskScheduler.h>
 
 class TaskTempHumidity : public Task {
 public:
     TaskTempHumidity(unsigned long interval, DHT* dht);
-
     void Callback();
+    
+    float getTemperature();
+    float getHumidity();
 
 private:
     DHT* dht;
-    // Здесь могут быть приватные переменные и другие методы
+    float temperature;
+    float humidity;
 };
 
-#endif // TASK_TEMP_HUMIDITY_H
+#endif // TASKTEMP_HUMIDITY_H

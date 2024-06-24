@@ -1,18 +1,15 @@
 #include "TaskTempHumidity.h"
 #include <ArduinoJson.h>
 
-// Определение статического конструктора TaskTempHumidity
-static TaskTempHumidity::TaskTempHumidity(unsigned long interval, DHT* dht)
-    : Task(interval, TASK_FOREVER, nullptr), dht(dht) {
-    // Реализация конструктора, если требуется
+TaskTempHumidity::TaskTempHumidity(unsigned long interval, DHT* dht)
+    : Task(interval, TASK_FOREVER, nullptr), dht(dht), temperature(NAN), humidity(NAN) {
 }
 
-// Реализация метода Callback для TaskTempHumidity
 void TaskTempHumidity::Callback() {
-    float humidity = dht->readHumidity();      // Считываем влажность
-    float temperature = dht->readTemperature(); // Считываем температуру
+    humidity = dht->readHumidity();
+    temperature = dht->readTemperature();
+
     JsonDocument doc;
-  
     doc["sensor"] = "temp_humidity";
     if (!isnan(humidity) && !isnan(temperature)) {    
         doc["humidity"] = humidity;
@@ -20,7 +17,15 @@ void TaskTempHumidity::Callback() {
     } else {
         doc["error"] = "Failed to read temperature and humidity sensor";
     }
-  
-    serializeJson(doc, Serial);
-    Serial.println();
+
+    //serializeJson(doc, Serial);
+    //Serial.println();
+}
+
+float TaskTempHumidity::getTemperature() {
+    return temperature;
+}
+
+float TaskTempHumidity::getHumidity() {
+    return humidity;
 }
